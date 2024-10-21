@@ -37,17 +37,23 @@ extract_and_combine_coefs <- function(models, model_names) {
 
   # Function to extract coefficients and SE
   extract_coef_se <- function(model, model_name) {
-    if (inherits(model, "lmerMod")) {
-      tidy(model) %>%
-        filter(effect == "fixed", term %in% c("tmax", "ppt", "year")) %>%
-        select(term, estimate, std.error) %>%
-        mutate(model = model_name)
-    } else {
-      tidy(model) %>%
-        filter(term %in% c("tmax", "ppt", "year", "tmaxSummer", "tmax_an")) %>%
-        select(term, estimate, std.error) %>%
-        mutate(model = model_name)
-    }
+    slopes_df <- avg_slopes(model) %>% 
+      as_tibble()
+    slopes_df %>% 
+      filter(term %in% c("tmax", "tmaxSummer", "tmax_an")) %>% 
+      select(term, estimate, std.error) %>% 
+      mutate(model = model_name)
+    # if (inherits(model, "lmerMod")) {
+    #   tidy(model) %>%
+    #     filter(effect == "fixed", term %in% c("tmax", "ppt", "year")) %>%
+    #     select(term, estimate, std.error) %>%
+    #     mutate(model = model_name)
+    # } else {
+    #   tidy(model) %>%
+    #     filter(term %in% c("tmax", "ppt", "year", "tmaxSummer", "tmax_an")) %>%
+    #     select(term, estimate, std.error) %>%
+    #     mutate(model = model_name)
+    # }
   }
 
   # Apply extract_coef_se to each model and combine results
@@ -57,12 +63,14 @@ extract_and_combine_coefs <- function(models, model_names) {
 }
 
 #ls(envir = .GlobalEnv)
-
+# models_list <- list(fe_mod_noCE, fe_mod_hetero, fe_mod_noyr, fe_mod, fe_mod_quad)
 models_list <- list(fe_mod_noCE, fe_mod_hetero, fe_mod_noyr, fe_mod, fe_mod_quad, fe_mod_no_int, fe_mod_an, 
                     fe_mod_summer, fe_mod_lag, lmm_mod_int, lmm_mod_rslopes, lmm_mod_rslopes_only)
 
 
 # Corresponding names for each model
+# model_names <- c("No clustering", "Heteroskedasticity", "W/out year", "Target model",
+#                  "Quadratic")
 model_names <- c("No clustering", "Heteroskedasticity", "W/out year", "Target model",
                  "Quadratic", "No interaction", "Annual weather", "Summer weather", "Lagged weather",
                  "Intercepts", "Intercepts & slopes", "Slopes only")
@@ -96,7 +104,7 @@ spec_data <- all_coefs %>%
     lmm_mod_rslopes_only = model == "Slopes only"
   ) %>%
   #select(-model)
-  select(-c(model, ppt_estimate, ppt_std.error, year_estimate, year_std.error))
+  select(-c(model))
 
 
 data <- as.data.frame(spec_data)

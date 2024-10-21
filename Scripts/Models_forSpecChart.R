@@ -20,7 +20,8 @@
 
 ## packages
 librarian::shelf(sjPlot, lme4, patchwork, tidyverse, 
-                 fixest, clubSandwich, here, lmtest, sandwich, mgcv)
+                 fixest, clubSandwich, here, lmtest, sandwich, mgcv,
+                 marginaleffects)
 
 ## note: need to fix lagged weather data
 
@@ -34,11 +35,14 @@ paneldat <- rwldat %>%
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 1. The panel model 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-fe_mod <-  feols(log(value+1) ~ tmax * ppt + year | tree_id,
+fe_mod <-  feols(log(value + 0.01) ~ tmax * ppt + year | tree_id,
                  data= paneldat, cluster = ~ plot_id_needle)
 
+fe_mod <-  feols(log(value+1) ~ tmax * ppt + year| tree_id,
+                      data= paneldat, cluster = ~ plot_id_needle)
 summary(fe_mod)
+# avg_slopes(fe_mod)
+
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 2. Without clustered standard errors 
