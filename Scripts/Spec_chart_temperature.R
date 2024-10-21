@@ -21,7 +21,7 @@ librarian::shelf(here, broom, broom.mixed, here, tidyverse)
 # Load specification chart function and model results
 
 source(here("Scripts", "spec_chart_function.R"))
-source(here("Scripts", "Models_forSpecChart.R"))
+source(here("Scripts", "Models_forSpecChart_updated.R"))
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -37,17 +37,23 @@ extract_and_combine_coefs <- function(models, model_names) {
 
   # Function to extract coefficients and SE
   extract_coef_se <- function(model, model_name) {
-    if (inherits(model, "lmerMod")) {
-      tidy(model) %>%
-        filter(effect == "fixed", term %in% c("tmax", "ppt", "year")) %>%
-        select(term, estimate, std.error) %>%
-        mutate(model = model_name)
-    } else {
-      tidy(model) %>%
-        filter(term %in% c("tmax", "ppt", "year", "tmaxSummer", "tmax_an")) %>%
-        select(term, estimate, std.error) %>%
-        mutate(model = model_name)
-    }
+    slopes_df <- avg_slopes(model) %>% 
+      as_tibble()
+    slopes_df %>% 
+      filter(term %in% c("tmax", "tmaxSummer", "tmax_an")) %>% 
+      select(term, estimate, std.error) %>% 
+      mutate(model = model_name)
+    # if (inherits(model, "lmerMod")) {
+    #   tidy(model) %>%
+    #     filter(effect == "fixed", term %in% c("tmax", "ppt", "year")) %>%
+    #     select(term, estimate, std.error) %>%
+    #     mutate(model = model_name)
+    # } else {
+    #   tidy(model) %>%
+    #     filter(term %in% c("tmax", "ppt", "year", "tmaxSummer", "tmax_an")) %>%
+    #     select(term, estimate, std.error) %>%
+    #     mutate(model = model_name)
+    # }
   }
 
   # Apply extract_coef_se to each model and combine results
@@ -63,6 +69,7 @@ models_list <- list(fe_mod_noCE, fe_mod_hetero, fe_mod_noyr, fe_mod, fe_mod_quad
 
 
 # Corresponding names for each model
+
 model_names <- c("No clustering", "Heteroskedasticity", "W/out year", "Target model",
                  "Quadratic", "No interaction", "Annual weather", "Summer weather", "Lagged weather",
                  "Intercepts", "Intercepts & slopes", "Slopes only")
@@ -87,7 +94,7 @@ spec_data <- all_coefs %>%
     fe_mod_noyr = model == "W/out year",
     fe_mod = model == "Target model",
     fe_mod_quad = model == "Quadratic",
-    fe_mod_cube = model == "No interaction",
+    fe_mod_no_int = model == "No interaction",
     fe_mod_an = model == "Annual weather",
     fe_mod_summer = model == "Summer weather",
     fe_mod_lag = model == "Lagged weather",
@@ -96,12 +103,12 @@ spec_data <- all_coefs %>%
     lmm_mod_rslopes_only = model == "Slopes only"
   ) %>%
   #select(-model)
-  select(-c(model, ppt_estimate, ppt_std.error, year_estimate, year_std.error))
+  select(-c(model))
 
 
 data <- as.data.frame(spec_data)
 
-labels <- list("FE models:" = c("No clustering", "Heteroskedasticity", "W/out year", "Target model", "No interaction", "Cubic"),
+labels <- list("FE models:" = c("No clustering", "Heteroskedasticity", "W/out year", "Target model", "No interaction", "Quadratic"),
                  "Weather windows:" = c("Annual weather", "Summer weather", "Lagged weather"),
                  "Mixed models:" = c("Intercepts", "Intercepts & slopes", "Slopes only"))
 
