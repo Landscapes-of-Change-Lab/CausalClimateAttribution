@@ -20,8 +20,8 @@ librarian::shelf(here, broom, broom.mixed, here, tidyverse)
 
 # Load specification chart function and model results
 
-source(here("Scripts", "spec_chart_function.R"))
-source(here("Scripts", "Models_forSpecChart_updated.R"))
+source(here("Scripts", "Functions", "spec_chart_function.R"))
+source(here("Scripts", "AllModels_SpecChart.R"))
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
