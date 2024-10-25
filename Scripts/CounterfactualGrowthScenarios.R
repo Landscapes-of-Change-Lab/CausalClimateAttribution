@@ -18,13 +18,13 @@
 
 
 ## packages
-librarian::shelf(sjPlot, ggeffects, patchwork, tidyverse, broom,
+librarian::shelf(sjPlot, ggeffects, patchwork, tidyverse, broom,progress,
                  lme4, plotrix, ggpubr, mgcv, nlme, fixest, plotrix, egg, ggpmisc,
                  mvtnorm, clubSandwich, rasterVis, broom.mixed, scales,RColorBrewer, splines, zoo)
 
 
 ## data
-rwldat <- read_csv(here("Data", "paneldat_RWL.csv"))
+rwldat <- read_csv(here("Data", "Primary_data", "paneldat_RWL.csv"))
 
 
 
@@ -132,7 +132,17 @@ actualdat <- counterdat80 %>%
 ## create an empty dataframe for results
 results=data.frame()
 
+pb <- progress_bar$new(
+  format = "  Processing [:bar] :percent eta: :eta",
+  total = 1000,
+  clear = FALSE,
+  width = 60
+)
+
+
 for (i in 1:1000){
+  
+  pb$tick()
   
   d <- draw[i,]
   modified_fe_mod <-  fe_mod
@@ -167,7 +177,7 @@ head(results)
 
 ## new dataframe to create figures from
 pred_results <- results
-
+#write_csv(pred_results, here("Data", "Primary_data", "MC_simulation_data.csv"))
 
 set.seed(123)  # for reproducibility
 tercile_boundaries <- quantile(pred_results$ppt, probs = c(1/3, 2/3))
@@ -194,7 +204,7 @@ summarized_data <- calc_terc%>%
   )
 
 # Figure
-ribbonplot = ggplot(prepared_data, aes(x = year, y = tree_diff, color = precip_terciles, fill = precip_terciles)) +
+ribbonplot = ggplot(summarized_data, aes(x = year, y = tree_diff, color = precip_terciles, fill = precip_terciles)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   #geom_point(alpha = 0.01) +
   geom_ribbon(data = summarized_data, 
@@ -255,49 +265,5 @@ theme_set(
 
 counter_clim_fig + (ribbonplot/diff_fig) & plot_annotation(tag_levels = "A")
 
-## density figs
-# dens_fig <- pred_results %>%
-#   sample_n(1000) %>% 
-#   mutate(precip_terciles = ifelse(ppt<0.662672, "0-33",
-#                                   ifelse(ppt>=0.662672&ppt<1.034786 , "34-66", "67-100"))) %>%  
-#   select(vals_actual, vals_counter, tree_id, iteration, plot_id_needle, period, precip_terciles) %>%
-#   pivot_longer(-c(tree_id, iteration, plot_id_needle, period, precip_terciles)) %>%
-#   filter(period == "2010-2018") %>% 
-#   ggplot(aes(x=value, color=name, fill = name))+
-#   geom_density(alpha=.3)+
-#   labs(color = "", fill = "",
-#        title = "Predicted RWL across precip. terciles",
-#        x = "Predicted log(RWL)",
-#        y = "Density")+
-#   guides(fill = F, color = F)+
-#   scale_fill_manual(
-#     values = c("vals_counter" = "#303077", "vals_actual" = "#C75B77"),
-#     labels = c("Actual", "Counterfactual"))+
-#   scale_color_manual(
-#     values = c("vals_counter" = "#303077", "vals_actual" = "#C75B77"),
-#     labels = c("Actual", "Counterfactual"))+
-#   theme(legend.position=c(.25,.90),
-#         legend.background = element_blank())+
-#   facet_grid(~precip_terciles)
-# 
-# 
-# dens_fig
-
-
-
-library(ggplot2)
-library(grid)
-
-# Create a simple ggplot
-p <- ggplot() + geom_point() + ggtitle("Test Plot")
-
-# Build the plot
-built_plot <- ggplot_build(p)
-
-# Extract the font family
-default_font <- built_plot$plot$theme$text$family
-
-# Print the result
-print(paste("The default font family is:", default_font))
 
 

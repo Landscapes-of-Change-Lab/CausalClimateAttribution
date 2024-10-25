@@ -30,11 +30,11 @@ librarian::shelf(terra, here, tidyverse, sf, tmap, lubridate)
 source(here("Scripts", "Functions", "extract_counterfactual_function.R"))
 
 ## CA boundary
-ca <- vect(here("Data","SpatialFiles", "CA_polygon_nad83zone11.shp"))
+ca <- vect(here("Data","Spatial_files", "CA_polygon_nad83zone11.shp"))
 plot(ca)
 
 ## Random points
-random_points <- read_csv(here("Data","SpatialFiles", "ca_random_points.csv"))
+random_points <- read_csv(here("Data","Spatial_files", "ca_random_points.csv"))
 
 # Convert points to sf object
 points_sf <- st_as_sf(random_points, 
@@ -57,7 +57,7 @@ tm_shape(points_sf) +
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ## counterfactual data
-nc_files <- list.files(here("Data",  "Counterfactuals"), 
+nc_files <- list.files(here("Data",  "Counterfactual"), 
                        pattern = "\\.nc$", 
                        full.names = TRUE)
 raster_list <- rast(nc_files)
