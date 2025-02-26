@@ -23,46 +23,130 @@ librarian::shelf(sjPlot, lme4, patchwork, tidyverse,
                  fixest, clubSandwich, here, lmtest, sandwich, mgcv,
                  marginaleffects)
 
+source(here("Scripts", "Functions", "spec_chart_function.R"))
+
+
 ## note: need to fix lagged weather data
 
+
 ## data
-rwldat <- read_csv(here("Data", "Primary_data", "paneldat_RWL.csv"))
-climdat <- read_csv(here("Data", "Primary_data","climatewindows.csv"))
+# rwldat <- read_csv(here("Data", "Primary_data", "paneldat_RWL.csv"))
+# climdat <- read_csv(here("Data", "Primary_data","climatewindows.csv"))
+wdir <- 'G:/My Drive/collaborations/ecology/CausalInferenceClimateAttribution/'
+rwldat <- read_csv(paste0(wdir, "paneldat_RWL.csv"))
+climdat <- read_csv(paste0(wdir, "climatewindows.csv"))
 
 paneldat <- rwldat %>% 
   left_join(climdat)
 
+
+winsorize_value <- paneldat %>% filter(value>0) %>% pull(value) %>% min()
+paneldat <- paneldat %>% 
+  mutate(value_w = ifelse(value==0, winsorize_value, value))
+
+
+# Function to extract coefficients and SE
+extract_coef_se <- function(model) {
+  slopes_df <- avg_slopes(model) %>% 
+    as_tibble()
+  slopes_df %>% 
+    filter(term %in% c("tmax", "tmaxSummer", "tmax_an")) %>% 
+    select(term, estimate, std.error)
+}
+
+
+specs <- data.frame(coef=NaN, 
+                    se=NaN,
+                    stder_clust = NaN,
+                    stder_het = NaN,
+                    clim_lin = NaN,
+                    clim_quad = NaN,
+                    clim_int = NaN,
+                    ww_wy = NaN,
+                    ww_an = NaN,
+                    ww_sum = NaN,
+                    ww_lag = NaN,
+                    struc_plotfe = NaN,
+                    struc_ri = NaN) 
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 1. The panel model 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fe_mod <-  feols(log(value + 0.01) ~ tmax * ppt + year | tree_id,
+fe_mod <-  feols(log(value_w) ~ tmax * ppt + year | tree_id,
                  data= paneldat, cluster = ~ plot_id_needle)
-
-fe_mod <-  feols(log(value+1) ~ tmax * ppt + year| tree_id,
-                      data= paneldat, cluster = ~ plot_id_needle)
 summary(fe_mod)
+avg_slopes(fe_mod)
+
+fe_coef <- extract_coef_se(fe_mod)
+new_row <-  data_frame(coef=fe_coef$estimate, 
+                       se=fe_coef$std.error,
+                       stder_clust = TRUE,
+                       stder_het = FALSE,
+                       clim_lin = TRUE, 
+                       clim_quad = FALSE,
+                       clim_int = FALSE,
+                       ww_wy = TRUE,
+                       ww_an = FALSE,
+                       ww_sum = FALSE,
+                       ww_lag = FALSE,
+                       struc_plotfe = TRUE,
+                       struc_ri = FALSE)
+specs <- rbind(specs, new_row)
 # avg_slopes(fe_mod)
 
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# 2. Without clustered standard errors 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-fe_mod_noCE <-  feols(log(value + 0.01) ~ tmax * ppt + year| tree_id,
-                      data= paneldat, vcov = "iid")
-
-summary(fe_mod_noCE)
-tab_model(fe_mod, digits = 4, show.se = T, show.ci = F)
+# 
+# #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# # 2. Without clustered standard errors 
+# #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# 
+# fe_mod_noCE <-  feols(log(value_w) ~ tmax * ppt + year| tree_id,
+#                       data= paneldat, vcov = "iid")
+# 
+# summary(fe_mod_noCE)
+# tab_model(fe_mod, digits = 4, show.se = T, show.ci = F)
+# 
+# fe_coef <- extract_coef_se(fe_mod)
+# new_row <-  data_frame(coef=fe_coef$estimate, 
+#                        se=fe_coef$std.error,
+#                        stder_clust = TRUE,
+#                        stder_het = FALSE,
+#                        clim_lin = TRUE, 
+#                        clim_quad = FALSE,
+#                        clim_int = FALSE,
+#                        ww_wy = TRUE,
+#                        ww_an = FALSE,
+#                        ww_sum = FALSE,
+#                        ww_lag = FALSE,
+#                        struc_plotfe = TRUE,
+#                        struc_ri = FALSE)
+# specs <- rbind(specs, new_row)
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 3. heteroskedasticity-robust standard errors
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fe_mod_hetero <-  feols(log(value + 0.01) ~ tmax * ppt + year | tree_id,
+fe_mod_hetero <-  feols(log(value_w) ~ tmax * ppt + year | tree_id,
                         data= paneldat, vcov = "hetero")
 
 summary(fe_mod_hetero)
+
+fe_hetero_coef <- extract_coef_se(fe_mod_hetero)
+new_row <-  data_frame(coef=fe_hetero_coef$estimate, 
+                       se=fe_hetero_coef$std.error,
+                       stder_clust = FALSE,
+                       stder_het = TRUE,
+                       clim_lin = TRUE, 
+                       clim_quad = FALSE,
+                       clim_int = FALSE,
+                       ww_wy = TRUE,
+                       ww_an = FALSE,
+                       ww_sum = FALSE,
+                       ww_lag = FALSE,
+                       struc_plotfe = TRUE,
+                       struc_ri = FALSE)
+specs <- rbind(specs, new_row)
+
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 4. Panel model without year effects
@@ -199,4 +283,94 @@ length(ls(envir = .GlobalEnv))
 
 
 
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Create spec chart --------------------------------------------------------
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## Create figure
+highlight_n <- 1
+
+## Define label structure
+labels <- list("Standard errors" = c("Clustered", "Heteroskedasticity\nrobust"),
+               "Climate relationships" = c("Linear", "Quadratic", "Interaction"),
+               "Weather window" = c("Water year", "Annual", "Summer", "Lagged"),
+               "Model structure" = c("Fixed effects", "Random intercept"))
+
+specs <- specs %>% drop_na()
+svg(paste0(wdir, 'robustness.svg'), width = 9, height = 14)
+par(oma=c(1,0,1,1))
+
+robustness_fig <- schart(specs, labels, highlight=highlight_n, order = "asis", 
+                         # cex=(1.2),fonts=c(2,3),
+                         # heights = c(.4,.6),
+                         n=c(10), ci = c(.95),
+                         # n=c(1, 2, 1, 1, 4, 3), ci = c(.95),
+                         ylab = "Average marginal effect of\ntemperature on growth",
+                         col.est=c("grey80", "dodgerblue4"),
+                         col.dot=c("grey60","grey95","grey95","dodgerblue4"),
+                         bg.dot=c("grey60","grey95","grey95","dodgerblue4"),
+                         lwd.symbol=1)
+
+# text(x = 1, y = -.008, label = "1",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 3, y = -.008, label = "2",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 4, y = -.008, label = "3",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 6, y = -.008, label = "4",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 8, y = -.008, label = "5",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 10, y = -.008, label = "6",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 11, y = -.008, label = "7",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 12, y = -.008, label = "8",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 13, y = -.008, label = "9",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 15, y = -.008, label = "10",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 16, y = -.008, label = "11",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+# 
+# text(x = 17, y = -.008, label = "12",
+#      col = "black",   # Color of the text
+#      font = 2,      # Bold face
+#      cex = 1)     # Size
+
+dev.off()
 
