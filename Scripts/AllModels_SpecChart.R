@@ -11,9 +11,9 @@
 ##
 ## ---------------------------
 ##
-## Notes: This code estimates the panel model
-##    which is used to estimate the causal effect
-##    of temperature on growth
+## Notes: This code estimates different models with 
+##    specifications to build the specification chart 
+##    which is Figure 7 in the manuscript
 ## ---------------------------
 
 
@@ -23,32 +23,13 @@ librarian::shelf(sjPlot, lme4, patchwork, tidyverse,
                  fixest, clubSandwich, here, lmtest, sandwich, mgcv,
                  marginaleffects)
 
+## source function required for this analysis
 source(here("Scripts", "Functions", "spec_chart_function.R"))
 
 
-## note: need to fix lagged weather data
-
-
-## data
-# rwldat <- read_csv(here("Data", "Primary_data", "paneldat_RWL.csv"))
-# climdat <- read_csv(here("Data", "Primary_data","climatewindows.csv"))
-# rwldat <- read_csv(paste0(wdir, "paneldat_RWL.csv"))
-# climdat <- read_csv(paste0(wdir, "climatewindows.csv"))
-# latlong <- read_csv(paste0(wdir, "plotlatlong.csv")) %>% rename(plot_id_needle = plot)
-# paneldat <- rwldat %>% 
-#   left_join(climdat) %>% 
-#   left_join(latlong, by = "plot_id_needle")
-
-wdir <- 'G:/My Drive/collaborations/ecology/CausalInferenceClimateAttribution/'
-paneldat <- read_csv(paste0(wdir, "cleaned_RWL_climdat.csv"))
-
-
-
-
-
-winsorize_value <- paneldat %>% filter(value>0) %>% pull(value) %>% min()
-paneldat <- paneldat %>% 
-  mutate(value_w = ifelse(value==0, winsorize_value, value))
+## data to run all analyses
+here()
+paneldat <- read_csv(here("Data", "cleaned_RWL_climdat.csv"))
 
 
 # Function to extract coefficients and SE
@@ -584,72 +565,72 @@ robustness_fig <- schart(specs, labels, highlight=highlight_n, order = "asis",
                          bg.dot=c("grey60","grey95","grey95","dodgerblue4"),
                          lwd.symbol=1)
 
-text(x = 1, y = .025, label = "A",
+text(x = 1, y = .027, label = "A",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 2, y = .025, label = "B",
+text(x = 2, y = .027, label = "B",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 4, y = .025, label = "C",
+text(x = 4, y = .027, label = "C",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 5, y = .025, label = "D",
+text(x = 5, y = .027, label = "D",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 6, y = .025, label = "E",
+text(x = 6, y = .027, label = "E",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 8, y = .025, label = "F",
+text(x = 8, y = .027, label = "F",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 9, y = .025, label = "G",
+text(x = 9, y = .027, label = "G",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 11, y = .025, label = "H",
+text(x = 11, y = .027, label = "H",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 12, y = .025, label = "I",
+text(x = 12, y = .027, label = "I",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 13, y = .025, label = "J",
+text(x = 13, y = .027, label = "J",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 14, y = .025, label = "K",
+text(x = 14, y = .027, label = "K",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 16, y = .025, label = "L",
+text(x = 16, y = .027, label = "L",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-text(x = 17, y = .025, label = "M",
+text(x = 17, y = .027, label = "M",
      col = "black",   # Color of the text
      font = 2,      # Bold face
      cex = 1)     # Size
 
-dev.off()
+#dev.off()
 
 
 

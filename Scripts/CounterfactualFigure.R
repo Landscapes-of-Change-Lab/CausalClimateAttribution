@@ -117,6 +117,7 @@ splinefig <- data_long %>%
                      labels = c("GAM", "Linear", 
                                 "Quadratic", 
                                 "Observed","Spline"))+
+  #guides(fill=F, color=F)+
   theme(plot.title = element_text(hjust = 0.5))+
   scale_x_continuous(breaks = seq(1960, 2020, by = 10))
 
@@ -179,10 +180,10 @@ windows <- temp_data %>%
     theme(plot.title = element_text(hjust = 0.5))+
     scale_x_continuous(breaks = seq(1900, 2020, by = 20))
 
-
+windows
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 5. Combining figures
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-counterfig + windows + splinefig & plot_annotation(tag_levels = "A")
+counterfig + windows + splinefig  & plot_annotation(tag_levels = "A") 
 
