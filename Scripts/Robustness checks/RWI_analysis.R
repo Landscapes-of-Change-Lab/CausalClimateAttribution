@@ -33,16 +33,16 @@ theme_set(
 )
 
 
-rwidat <- read_csv(here("Data", "PANEL_data_rwi.csv")) %>% 
+rwidat <- read_csv(here("Data", "Primary_data", "PANEL_data_rwi.csv")) %>% 
   mutate(ppt = ppt/1000)
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 2. The model
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fe_mod <-  feols(value ~ tmax * ppt + year | tree_id,
+fe_mod <-  feols(value ~ tmax + ppt | tree_id + year,
                  data= rwidat, cluster = ~ plot_id_needle)
 
 summary(fe_mod)
-tab_model(fe_mod, digits =4, show.ci = F, show.se = T)
+tab_model(fe_mod, digits = 4, show.ci = F, show.se = T)
 

@@ -1,7 +1,9 @@
 
 schart <- function(data, labels=NA, highlight=NA, n=1, index.est=1, index.se=2, index.ci=NA,
-                   order="asis", ci=.95, ylim=NA, axes=T, heights=c(1,1), leftmargin=11, offset=c(0,0), ylab="Temperature coefficient", lwd.border=1, horizontal=T,
-                   lwd.est=3, pch.est=21, lwd.symbol=2, ref=0, lwd.ref=1, lty.ref=2, col.ref="black", band.ref=NA, col.band.ref=NA,length=0,
+                   order="asis", ci=.95, ylim=NA, axes=T, heights=c(1,1), leftmargin=11, offset=c(0,0), 
+                   ylab="Temperature coefficient", lwd.border=1, horizontal=T,
+                   lwd.est=3, pch.est=21, lwd.symbol=2, ref=0, lwd.ref=1, lty.ref=2, col.ref="black", 
+                   band.ref=NA, col.band.ref=NA,length=0,
                    col.est=c("grey60", "red3"), col.est2=c("grey80","lightcoral"), bg.est=c("white", "white"),
                    col.dot=c("grey60","grey95","grey95","red3"),
                    bg.dot=c("grey60","grey95","grey95","white"),
@@ -67,7 +69,11 @@ schart <- function(data, labels=NA, highlight=NA, n=1, index.est=1, index.se=2, 
     if (order=="asis")       o <- 1:length(d[,index.est])
     if (order=="increasing") o <- order(d[,index.est])
     if (order=="decreasing") o <- order(-d[,index.est])
-    if (!is.numeric(d[,index.est])) {warning("index.est does not point to a numeric vector.") ; break}
+    if (!is.numeric(d[,index.est])) {
+      warning("index.est does not point to a numeric vector.")
+      return(NULL)  # Or use stop("index.est must be numeric")
+    }
+    #if (!is.numeric(d[,index.est])) {warning("index.est does not point to a numeric vector.") ; break}
     d <- d[o,]
     est <- d[,index.est] # Estimate
     if (length(index.ci)>1) {

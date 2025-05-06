@@ -54,7 +54,7 @@ counterfig <- allclimdat %>%
   geom_line(linewidth = .3, alpha=.6)+
   geom_point(size = .5, alpha=.6)+
   geom_smooth(se=F, span=1)+
-  labs(title = "Counterfactual data", color = "",
+  labs(title = "Climate models", color = "",
        x = "Year",
        y = "Temperature (°C)")+
   scale_color_manual(
@@ -164,13 +164,13 @@ windows <- temp_data %>%
     geom_point(size = .5, alpha=.9, color="#5e6988")+
     annotate("segment", x = 1900, xend = 1980, 
            y = mean_1900_1980, yend = mean_1900_1980,
-           color = "#303077", linewidth = 1) +
+           color = "#EAB94B", linewidth = 1) +
     annotate("segment", x = 1980, xend = 2020, 
            y = mean_1980_2018, yend = mean_1980_2018,
-           color = "#44A894", linewidth = 1) +
+           color = "#EAB94B", linewidth = 1) +
     annotate("segment", x = 1990, xend = 2020, 
            y = mean_1990_2018, yend = mean_1990_2018,
-           color = "#91376F", linewidth = 1) +
+           color = "#EAB94B", linewidth = 1) +
     annotate("segment", x = 2000, xend = 2020, 
            y = mean_2000_2018, yend = mean_2000_2018,
            color = "#EAB94B", linewidth = 1) +

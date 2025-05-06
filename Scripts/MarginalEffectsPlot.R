@@ -27,12 +27,8 @@ theme_set(
 )
 
 
-## data
-rwldat <- read_csv(here("Data", "Primary_data", "paneldat_RWL.csv"))
-climdat <- read_csv(here("Data","Primary_data", "climatewindows.csv"))
-
-paneldat <- rwldat %>% 
-  left_join(climdat)
+paneldat <- read_csv(here("Data", "cleaned_RWL_climdat.csv")) %>% 
+  mutate(ppt = ppt/1000) ## converting mm to m for interpretability
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # The panel model 
@@ -42,7 +38,7 @@ fe_mod <-  feols(log(value+0.01) ~ tmax * ppt + year | tree_id,
                  data= paneldat, cluster = ~ plot_id_needle)
 
 summary(fe_mod)
-modelsummary(fe_mod)
+
 
 tab_model(fe_mod, digits=4, show.ci = F, show.se = T)
 
@@ -58,7 +54,7 @@ mtemp <- slopes(fe_mod,
               by = "ppt",
               newdata = datagrid(ppt = seq(min(paneldat$ppt), max(paneldat$ppt), length.out = 100)))
 
-# the plot
+# create the marginal effects plot of temperature
 marg_temp = ggplot(mtemp, aes(x = ppt*1000, y = estimate, color)) +
   geom_hline(yintercept = 0, linetype="dashed")+
   geom_line(color="#91376F") +
@@ -75,7 +71,7 @@ mprecip <- slopes(fe_mod,
                 by = "tmax",
                 newdata = datagrid(tmax = seq(min(paneldat$tmax), max(paneldat$tmax), length.out = 100)))
 
-# The plot
+# The precipitation plot
 marg_precip = ggplot(mprecip, aes(x = tmax, y = estimate)) +
   geom_hline(yintercept = 0, linetype="dashed")+
   geom_line(color= "#303077") +
@@ -85,14 +81,17 @@ marg_precip = ggplot(mprecip, aes(x = tmax, y = estimate)) +
        y = "Marginal effect of precipitation")
 
 
-
+## visualizing the two plots together
 marg_temp + marg_precip +   plot_annotation(tag_levels = "A")
  
+
+
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Adding density distribution panels to both plots
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# Add labels A and B to the density plots only
+# Create a precipitation density plot
 ppt_density <- ggplot(paneldat, aes(x = ppt*1000)) +
   geom_density(fill = "#91376F", alpha = 0.6) +
   scale_x_continuous(breaks = seq(0, 3800, by = 500)) +
@@ -114,17 +113,14 @@ ppt_density <- ggplot(paneldat, aes(x = ppt*1000)) +
   labs(y = "Density")
 
 
-# Adjust the temperature margins plot
-marg_temp <- marg_temp +
-  theme(plot.margin = margin(0, 0, 0, 0))
-
 # Combine with temperature marginal effects plot
 combined_temp_plot <- ppt_density / marg_temp +
   plot_layout(heights = c(2, 5), guides = "collect") +
   plot_annotation(theme = theme(plot.margin = margin(5, 5, 5, 5))) &
   theme(plot.margin = margin(5, 5, 5, 5))
 
-# Add label B to the temperature density plot
+
+# Create a density plot for temperature
 tmax_density <- ggplot(paneldat, aes(x = tmax)) +
   geom_density(fill = "#303077", alpha = 0.6) +
   scale_y_continuous(breaks = function(x) pretty(x, n = 3)) +
@@ -141,9 +137,6 @@ tmax_density <- ggplot(paneldat, aes(x = tmax)) +
   ) +
   labs(y = "Density")
 
-# Adjust the precipitation margins plot
-marg_precip <- marg_precip +
-  theme(plot.margin = margin(0, 0, 0, 0))
 
 # Combine with precipitation marginal effects plot
 combined_precip_plot <- tmax_density / marg_precip +
@@ -151,23 +144,16 @@ combined_precip_plot <- tmax_density / marg_precip +
   plot_annotation(theme = theme(plot.margin = margin(5, 5, 5, 5))) &
   theme(plot.margin = margin(5, 5, 5, 5))
 
-# Display the combined plots
-# combined_temp_plot
-# combined_precip_plot
 
-# Set top margin of margin plots to negative to reduce gap
+# Set top margin of margin plots to negative to reduce gap between panels
 marg_temp <- marg_temp +
-  theme(
-    plot.margin = margin(-5, 0, 5, 0)  # Negative top margin to reduce gap
-  )
+  theme(plot.margin = margin(-5, 0, 5, 0))
 
 # Set top margin of precipitation plot to negative to reduce gap
 marg_precip <- marg_precip +
-  theme(
-    plot.margin = margin(-5, 0, 5, 0)  # Negative top margin to reduce gap
-  )
+  theme(plot.margin = margin(-5, 0, 5, 0))
 
-# Combine with minimal spacing between panels
+# Combine panels
 combined_temp_plot <- ppt_density / marg_temp +
   plot_layout(heights = c(1.5, 5)) & 
   theme(plot.margin = margin(0, 5, 0, 5))
@@ -176,13 +162,12 @@ combined_precip_plot <- tmax_density / marg_precip +
   plot_layout(heights = c(1.5, 5)) & 
   theme(plot.margin = margin(0, 5, 0, 5))
 
-# Wrap each combined plot without additional theming
+# Wrap each combined plot for patchwork 
 wrapped_temp_plot <- combined_temp_plot
 wrapped_precip_plot <- combined_precip_plot
 
 # Combine the wrapped plots
 final_figure <- wrapped_temp_plot | wrapped_precip_plot
 
-# Display the final combined figure
 final_figure
 
