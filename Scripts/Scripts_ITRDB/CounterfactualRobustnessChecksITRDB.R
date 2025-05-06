@@ -114,28 +114,28 @@ create_counterfactual <- function(model, data_df, model_name) {
   return(counterdat)
 }
 
-## 1. Natural Spline Model (target method)
+## 1. natural spline (target method)
 ns_model <- lm(tmax ~ ns(year, df = 4) + factor(plot), data = climdat)
 ns_counter <- create_counterfactual(ns_model, climdat, "Natural Spline")
 
-## 2. GAM Model
+## 2. GAM model
 gam_model <- gam(tmax ~ s(year) + factor(plot), data = climdat)
 gam_counter <- create_counterfactual(gam_model, climdat, "GAM")
 
-## 3. Linear Model
+## 3. linear model
 linear_model <- lm(tmax ~ year + factor(plot), data = climdat)
 linear_counter <- create_counterfactual(linear_model, climdat, "Linear")
 
-## 4. Quadratic Model
+## 4. quadratic model
 qu_model <- lm(tmax ~ year + I(year^2) + factor(plot), data = climdat)
 qu_counter <- create_counterfactual(qu_model, climdat, "Quadratic")
 
-## 5. Smooth Spline (requires different handling due to different predict interface)
+## 5. smooth spline
 spline_fit <- lm(tmax ~ bs(year, knots = c(1980)) + factor(plot), data = climdat)
 spline_counter <- create_counterfactual(ns_model, climdat, "Smooth Spline")
 
 
-## Combine all counterfactual datasets
+## combine all counterfactual datasets
 all_counters <- bind_rows(
   ns_counter,
   gam_counter,
@@ -144,7 +144,7 @@ all_counters <- bind_rows(
   spline_counter
 )
 
-## Visualize the different counterfactual scenarios
+## Visualize the scenarios
 yearly_means <- all_counters %>%
   group_by(year, model_type) %>%
   summarize(
@@ -173,7 +173,7 @@ counter_summary <- all_counters %>%
 
 counter_summary
 
-## creating counterfactual and actual dataframes
+## creating counterfactual and actual dataframes for prediction
 actualdat <- climdat %>% 
   left_join(treedat)%>% 
   filter(year<2014)
@@ -233,6 +233,7 @@ counter_target <- all_counters %>%
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+## primary TWFE model
 fe_mod <-  feols(rwi ~ tmax * ppt | tree + year,
                  data= paneldat, cluster = ~ plot)
 
@@ -317,7 +318,6 @@ head(results)
 
 ## new dataframe to create figures from
 pred_results <- results
-#write_csv(pred_results, here("Data", "Primary_data", "counterfactual_robustness.csv"))
 
 ## calculate historical mean precip for each plot
 tercdat <- climdat %>% 
