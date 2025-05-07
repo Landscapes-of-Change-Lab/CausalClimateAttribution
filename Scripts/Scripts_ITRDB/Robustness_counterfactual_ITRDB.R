@@ -19,7 +19,7 @@
 
 ## packages
 librarian::shelf(sjPlot, ggeffects, patchwork, tidyverse, broom,progress, here,
-                 lme4, plotrix, ggpubr, mgcv, nlme, fixest, plotrix, egg, ggpmisc,
+                 lme4, plotrix, ggpubr, nlme, fixest, plotrix, egg, ggpmisc,
                  mvtnorm, clubSandwich, rasterVis, broom.mixed, scales,RColorBrewer, splines, zoo)
 
 
@@ -89,10 +89,6 @@ climdat <- pied_clim %>%
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-library(tidyverse)
-library(mgcv)  # For GAM models
-library(splines)  # For spline models
-
 # Prepare data similar to your example
 climdat_short <- climdat %>% 
   filter(year > 1979)
@@ -138,11 +134,9 @@ climdat_short$tmax_pred_anom_quad <- predict(temp_mod_quad)
 
 # Generate counterfactual climate variables for each model type
 climdat_short <- climdat_short %>%
-  mutate(
-    tmax_cf_linear = tmax - tmax_pred_anom_linear,
-    tmax_cf_spline = tmax - tmax_pred_anom_spline,
-    tmax_cf_quad = tmax - tmax_pred_anom_quad,
-  )
+  mutate(tmax_cf_linear = tmax - tmax_pred_anom_linear,
+      tmax_cf_spline = tmax - tmax_pred_anom_spline,
+      tmax_cf_quad = tmax - tmax_pred_anom_quad)
 
 #========== VISUALIZE RESULTS ==========
 
@@ -269,12 +263,8 @@ head(results)
 
 
 
-
-
-
-
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# THE FIGURES
+# Figure
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ## new dataframe to create figures from

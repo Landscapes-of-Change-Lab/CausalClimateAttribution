@@ -19,7 +19,7 @@
 
 ## packages
 librarian::shelf(sjPlot, ggeffects, patchwork, tidyverse, broom,progress, here,
-                 lme4, plotrix, ggpubr, mgcv, nlme, fixest, plotrix, egg, ggpmisc,
+                 lme4, plotrix, ggpubr, nlme, fixest, plotrix, egg, ggpmisc,
                  mvtnorm, clubSandwich, rasterVis, broom.mixed, scales,RColorBrewer, splines, zoo)
 
 
